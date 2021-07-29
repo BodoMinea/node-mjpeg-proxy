@@ -19,8 +19,8 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-var url = require('url');
 var http = require('http');
+var https = require('https');
 
 function extractBoundary(contentType) {
   contentType = contentType.replace(/\s+/g, '');
@@ -42,6 +42,8 @@ var MjpegProxy = exports.MjpegProxy = function(mjpegUrl) {
   if (!mjpegUrl) throw new Error('Please provide a source MJPEG URL');
 
   self.mjpegOptions = new URL(mjpegUrl);
+  self.http = https;
+  if (self.mjpegOptions.protocol == 'http:') self.http = http;
 
   self.audienceResponses = [];
   self.newAudienceResponses = [];
@@ -60,7 +62,7 @@ var MjpegProxy = exports.MjpegProxy = function(mjpegUrl) {
       self._newClient(req, res);
     } else {
       // Send source MJPEG request
-      self.mjpegRequest = http.request(self.mjpegOptions, function(mjpegResponse) {
+      self.mjpegRequest = self.http.request(self.mjpegOptions, function(mjpegResponse) {
         // console.log(`statusCode: ${mjpegResponse.statusCode}`)
         self.globalMjpegResponse = mjpegResponse;
         self.boundary = extractBoundary(mjpegResponse.headers['content-type']);
