@@ -36,7 +36,7 @@ function extractBoundary(contentType) {
   return contentType.substring(startIndex + 9, endIndex).replace(/"/gi,'').replace(/^\-\-/gi, '');
 }
 
-var MjpegProxy = exports.MjpegProxy = function(mjpegUrl) {
+var MjpegProxy = exports.MjpegProxy = function(mjpegUrl,allowInsecure=false) {
   var self = this;
 
   if (!mjpegUrl) throw new Error('Please provide a source MJPEG URL');
@@ -61,6 +61,8 @@ var MjpegProxy = exports.MjpegProxy = function(mjpegUrl) {
     if (self.mjpegRequest !== null) {
       self._newClient(req, res);
     } else {
+      let _old_TLS_setting = process.env["NODE_TLS_REJECT_UNAUTHORIZED"];
+      if (allowInsecure) process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
       // Send source MJPEG request
       self.mjpegRequest = self.http.request(self.mjpegOptions, function(mjpegResponse) {
         // console.log(`statusCode: ${mjpegResponse.statusCode}`)
@@ -117,6 +119,7 @@ var MjpegProxy = exports.MjpegProxy = function(mjpegUrl) {
           // console.log("...close");
         });
       });
+      if (allowInsecure) process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = _old_TLS_setting;
 
       self.mjpegRequest.on('error', function(e) {
         console.error('problem with request: ', e);
